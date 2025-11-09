@@ -17,7 +17,17 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+
+            //Commenter
+            'user_id' => User::factory(),
+            
+            //Post that has comment
+            'post_id' => Post::factory(),
+
+            //The comment text itself.
+            'body' => $this->faker->sentence(9)
+                        
+
         ];
     }
 }

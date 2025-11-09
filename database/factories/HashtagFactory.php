@@ -16,8 +16,14 @@ class HashtagFactory extends Factory
      */
     public function definition(): array
     {
+        //Random word for hashtag
+        $word = $this->faker->unique()->word();
+
         return [
-            //
+            'name' => $word,
+
+            //URL version
+            'slug' => Str::slug($word),
         ];
     }
 }

@@ -17,7 +17,12 @@ class PostFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            
+            //Poster
+            'user_id' => User::factory(),
+            
+            //Random caption
+            'caption' => $this->faker->sentence(9),
         ];
     }
 }
