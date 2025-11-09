@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('hashtag_post', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('hastag_id')->constrained()->cascadeOnDelete();
+            $table->ForeignId('post_id')->constrained()->cascadeOnDelete();
+            $table->unique(['hastag_id', 'post_id']);
             $table->timestamps();
         });
     }
