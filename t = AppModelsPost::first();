@@ -1,0 +1,26 @@
+[90m= [39m[34;4mIlluminate\Database\Eloquent\Collection[39;24m {#5240
+    [34mall[39m: [
+      [34;4mApp\Models\Post[39;24m {#5994
+        [34mid[39m: [35m1[39m,
+        [34muser_id[39m: [35m1[39m,
+        [34mcaption[39m: "[32mA ut quia sed quod tempore dolores ipsum et tempore sit.[39m",
+        [34mcreated_at[39m: "[32m2025-11-09 22:55:23[39m",
+        [34mupdated_at[39m: "[32m2025-11-09 22:55:23[39m",
+      },
+      [34;4mApp\Models\Post[39;24m {#5243
+        [34mid[39m: [35m2[39m,
+        [34muser_id[39m: [35m1[39m,
+        [34mcaption[39m: "[32mQuis dolorem ut mollitia nihil corrupti.[39m",
+        [34mcreated_at[39m: "[32m2025-11-09 22:55:23[39m",
+        [34mupdated_at[39m: "[32m2025-11-09 22:55:23[39m",
+      },
+      [34;4mApp\Models\Post[39;24m {#5228
+        [34mid[39m: [35m3[39m,
+        [34muser_id[39m: [35m1[39m,
+        [34mcaption[39m: "[32mOptio voluptate ipsam aliquid cupiditate qui voluptatum ad iure.[39m",
+        [34mcreated_at[39m: "[32m2025-11-09 22:55:23[39m",
+        [34mupdated_at[39m: "[32m2025-11-09 22:55:23[39m",
+      },
+    ],
+  }
+
