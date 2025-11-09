@@ -41,5 +41,32 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+
+    //Relationships start here
+    
+    //User can have many posts
+    public function posts() 
+    {
+        return $this->hasMany(Post::class);
+    
+    }
+    //User can make many comments
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+    // User can follow other users
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followed_id')
+                    ->withTimestamps();
+    }
+    // User can have multiple users following
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'followed_id', 'follower_id')
+                    ->withTimestamps();
+    }
+
     ];
 }
