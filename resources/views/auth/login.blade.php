@@ -5,47 +5,80 @@
     <title>Login — Campus Collective</title>
 </head>
 <body>
-    <div style="max-width:420px;margin:60px auto;font-family:system-ui;">
-        <h1 style="font-size:28px;margin-bottom:8px;">Campus Collective</h1>
-        <p style="color:#555;margin-top:0;margin-bottom:24px;">Log in to view the feed and post.</p>
+    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;font-family:system-ui;">
+        
+        <!-- Title -->
+        <h1 style="
+            margin-top:60px;
+            margin-bottom:30px;
+            font-size:32px;
+            letter-spacing:1px;
+            color:#f97316;
+            text-align:center;
+        ">
+            CAMPUS COLLECTIVE ;)
+        </h1>
 
-        @if ($errors->any())
-            <div style="padding:12px;background:#fee;border:1px solid #f99;margin-bottom:16px;">
-                <strong>Fix this:</strong>
-                <ul style="margin:8px 0 0 18px;">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        <!-- Login Card -->
+        <div style="
+            width:100%;
+            max-width:420px;
+            padding:28px;
+            border:1px solid #ddd;
+            border-radius:14px;
+        ">
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
+            @if ($errors->any())
+                <div style="padding:12px;background:#fee;border:1px solid #fca5a5;margin-bottom:16px;">
+                    <strong>Fix this:</strong>
+                    <ul style="margin:8px 0 0 18px;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-            <label>Email</label><br>
-            <input type="email" name="email" value="{{ old('email') }}" required autofocus
-                   style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin:6px 0 14px;"><br>
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
 
-            <label>Password</label><br>
-            <input type="password" name="password" required
-                   style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin:6px 0 14px;"><br>
+                <label>Email</label><br>
+                <input type="email" name="email" value="{{ old('email') }}" required autofocus
+                       style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin:6px 0 16px;"><br>
 
-            <label style="display:flex;gap:8px;align-items:center;margin-bottom:16px;">
-                <input type="checkbox" name="remember">
-                Remember me
-            </label>
+                <label>Password</label><br>
+                <input type="password" name="password" required
+                       style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin:6px 0 16px;"><br>
 
-            <button type="submit"
-                    style="width:100%;padding:12px;border:none;border-radius:10px;background:#111;color:#fff;">
-                Log in
-            </button>
-        </form>
+                <label style="display:flex;gap:8px;align-items:center;margin-bottom:18px;">
+                    <input type="checkbox" name="remember">
+                    Remember me
+                </label>
 
-        <p style="margin-top:16px;">
-            No account? <a href="{{ route('register') }}">Register</a>
-        </p>
+                <button type="submit"
+                        style="
+                            width:100%;
+                            padding:12px;
+                            border:none;
+                            border-radius:10px;
+                            background:#f97316;
+                            color:#fff;
+                            font-weight:600;
+                            cursor:pointer;
+                        ">
+                    Log in
+                </button>
+            </form>
+
+            <p style="margin-top:18px;text-align:center;">
+                No account?
+                <a href="{{ route('register') }}" style="color:#f97316;font-weight:600;">
+                    Register
+                </a>
+            </p>
+        </div>
     </div>
 </body>
 </html>
+
 
