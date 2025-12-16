@@ -3,26 +3,46 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\PostController;
-use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\FollowController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\HashtagController;
 
-Route::get('/', fn () => redirect()->route('feed'));
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
-Route::middleware('auth')->group(function () {
-    Route::get('/feed', [FeedController::class, 'index'])->name('feed');
+Route::get('/', fn () => redirect()->route('feed.index'));
 
-    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
-    Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+Route::middleware(['auth'])->group(function () {
 
-    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('comments.store');
+    // Feed
+    Route::get('/feed', [FeedController::class, 'index'])->name('feed.index');
 
-    Route::get('/users/{user}', [ProfileController::class, 'show'])->name('users.show');
+    // Posts (used by feed.blade.php)
+    Route::resource('posts', PostController::class)->only([
+        'store',
+        'show',
+    ]);
 
-    Route::post('/users/{user}/follow', [FollowController::class, 'store'])->name('follow.store');
-    Route::delete('/users/{user}/follow', [FollowController::class, 'destroy'])->name('follow.destroy');
-
-    Route::get('/hashtags/{hashtag:slug}', [HashtagController::class, 'show'])->name('hashtags.show');
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect()->route('feed.index')
+        : redirect()->route('login');
 });
+Route::get('/force-logout', function () {
+    auth()->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect()->route('login');
+});
+
+    // Profile (already in your app)
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
 
