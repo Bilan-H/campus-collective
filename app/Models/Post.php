@@ -21,7 +21,10 @@ class Post extends Model
     {
         return $this->hasMany(Comment::class);
     }
-    
+    public function likes()
+    {
+    return $this->belongsToMany(\App\Models\User::class, 'likes')->withTimestamps();
+    }
     //Posts can have many hashtags and hastags belong to many posts
     public function hashtags()
     {

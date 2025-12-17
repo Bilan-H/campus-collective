@@ -36,7 +36,7 @@ class PostController extends Controller
 
         $post->hashtags()->sync($ids);
 
-        return redirect()->route('feed')->with('success', 'Post created!');
+        return redirect()->route('feed.index')->with('success', 'Post created!');
     }
 }
 

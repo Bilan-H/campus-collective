@@ -1,35 +1,51 @@
-<x-app-layout>
-    <div class="max-w-2xl mx-auto py-6 space-y-4">
-        <a class="underline" href="{{ route('feed') }}">← Back to feed</a>
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Edit Profile</title></head>
+<body style="font-family:system-ui;max-width:720px;margin:40px auto;">
+    <a href="{{ route('feed.index') }}">← Back</a>
 
-        <div class="border rounded p-4 flex items-center justify-between">
-            <div>
-                <div class="text-xl font-bold">{{ $user->name }}</div>
-                <div class="text-sm text-gray-600">{{ $user->email }}</div>
-            </div>
+    <h1>Edit Profile</h1>
 
-            @if (! $isMe)
-                @if ($isFollowing)
-                    <form method="POST" action="{{ route('follow.destroy', $user) }}">
-                        @csrf @method('DELETE')
-                        <button class="px-4 py-2 bg-gray-200 rounded" type="submit">Unfollow</button>
-                    </form>
-                @else
-                    <form method="POST" action="{{ route('follow.store', $user) }}">
-                        @csrf
-                        <button class="px-4 py-2 bg-black text-white rounded" type="submit">Follow</button>
-                    </form>
-                @endif
-            @endif
+    @if (session('success'))
+        <div style="padding:10px;background:#ecfdf5;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:12px;">
+            {{ session('success') }}
         </div>
+    @endif
 
-        <h2 class="font-semibold">Posts</h2>
-        <div class="space-y-3">
-            @foreach ($user->posts as $post)
-                <div class="border rounded p-3">
-                    <a class="underline" href="{{ route('posts.show', $post) }}">{{ $post->caption }}</a>
-                </div>
-            @endforeach
-        </div>
-    </div>
-</x-app-layout>
+    <form method="POST" action="{{ route('profile.update') }}">
+        @csrf
+        @method('PATCH')
+
+        <label>Name</label><br>
+        <input name="name" value="{{ old('name', $user->name) }}"
+               style="width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;margin:6px 0 12px;" />
+        @error('name') <div style="color:#b91c1c;">{{ $message }}</div> @enderror
+
+        <label>Email</label><br>
+        <input name="email" value="{{ old('email', $user->email) }}"
+               style="width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;margin:6px 0 12px;" />
+        @error('email') <div style="color:#b91c1c;">{{ $message }}</div> @enderror
+
+        <button type="submit"
+                style="background:#f97316;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;">
+            Save
+        </button>
+    </form>
+
+    <hr style="margin:18px 0;">
+
+    <form method="POST" action="{{ route('profile.destroy') }}">
+        @csrf
+        @method('DELETE')
+        <button type="submit"
+                style="background:#b91c1c;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;">
+            Delete account
+        </button>
+    </form>
+</body>
+</html>
+
+
+
+
+

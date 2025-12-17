@@ -1,48 +1,33 @@
-<x-app-layout>
-    <div class="max-w-2xl mx-auto py-6 space-y-4">
-        <a class="underline" href="{{ route('feed') }}">← Back to feed</a>
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Post</title></head>
+<body>
+  <div style="max-width:720px;margin:40px auto;font-family:system-ui;">
+    <a href="{{ route('feed.index') }}">← Back</a>
 
-        <div class="border rounded p-4 space-y-2">
-            <div class="text-sm text-gray-600">
-                <a class="underline" href="{{ route('users.show', $post->user) }}">{{ $post->user->name }}</a>
-                · {{ $post->created_at->diffForHumans() }}
-            </div>
+    <h2>{{ $post->user->name }}</h2>
+    <p>{{ $post->caption }}</p>
 
-            <div class="text-lg">{{ $post->caption }}</div>
+    <hr>
 
-            <div class="flex flex-wrap gap-2">
-                @foreach ($post->hashtags as $tag)
-                    <a class="text-blue-700 underline text-sm" href="{{ route('hashtags.show', $tag) }}">
-                        #{{ $tag->name }}
-                    </a>
-                @endforeach
-            </div>
-        </div>
+    <h3>Comments ({{ $post->comments->count() }})</h3>
 
-        <h2 class="font-semibold">Comments</h2>
+    @foreach ($post->comments as $c)
+      <div style="padding:10px;border:1px solid #ddd;border-radius:10px;margin-bottom:10px;">
+        <strong>
+          <a href="{{ route('users.show', $c->user) }}">{{ $c->user->name }}</a>
+        </strong>
+        <div>{{ $c->body }}</div>
+      </div>
+    @endforeach
 
-        <div class="space-y-3">
-            @foreach ($post->comments as $comment)
-                <div class="border rounded p-3">
-                    <div class="text-sm text-gray-600">{{ $comment->user->name }}</div>
-                    <div>{{ $comment->body }}</div>
-                </div>
-            @endforeach
-        </div>
+    <form method="POST" action="{{ route('comments.store', $post) }}">
+      @csrf
+      <textarea name="body" rows="3" required style="width:100%;"></textarea>
+      <button type="submit">Comment</button>
+    </form>
+  </div>
+</body>
+</html>
 
-        <div class="border rounded p-4">
-            <h3 class="font-semibold mb-2">Add a comment</h3>
 
-            @if (session('comment_error'))
-                <div class="p-3 bg-red-100 rounded mb-2">{{ session('comment_error') }}</div>
-            @endif
-
-            <form method="POST" action="{{ route('comments.store', $post) }}" class="space-y-2">
-                @csrf
-                <textarea name="body" class="w-full border rounded p-2" rows="3" required></textarea>
-                @error('body') <div class="text-red-600 text-sm">{{ $message }}</div> @enderror
-                <button class="px-4 py-2 bg-black text-white rounded" type="submit">Comment</button>
-            </form>
-        </div>
-    </div>
-</x-app-layout>
