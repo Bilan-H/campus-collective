@@ -8,6 +8,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+use App\Models\Post;
+use App\Models\Comment;
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -42,40 +45,55 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-    
-    //Relationships start here
-    
-    //User can have many posts
-    public function posts() 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    // User has many posts
+    public function posts()
     {
         return $this->hasMany(Post::class);
-    
     }
 
-    //User can make many comments
+    // User has many comments
     public function comments()
     {
         return $this->hasMany(Comment::class);
     }
-    // User can follow other users
+
+    // Users I follow
     public function following()
     {
         return $this->belongsToMany(
-        self::class,
-        'follows',
-        'follower_id',
-        'following_id'
+            User::class,
+            'follows',
+            'follower_id', // me
+            'followed_id'  // them
         )->withTimestamps();
     }
-    // User can have multiple users following
+
+    // Users who follow me
     public function followers()
     {
-         return $this->belongsToMany(
-        self::class,
-        'follows',
-        'following_id',
-        'follower_id'
+        return $this->belongsToMany(
+            User::class,
+            'follows',
+            'followed_id', // me
+            'follower_id'  // them
         )->withTimestamps();
     }
-   
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helper methods (optional but useful)
+    |--------------------------------------------------------------------------
+    */
+
+    public function isFollowing(User $other): bool
+    {
+        return $this->following()->where('users.id', $other->id)->exists();
+    }
 }

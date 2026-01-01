@@ -8,12 +8,12 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function show(Post $post)
+    public function show(\App\Models\Post $post)
     {
-        $post->load(['user', 'hashtags', 'comments.user']);
-
-        return view('posts.show', compact('post'));
+    $post->load(['user', 'comments.user', 'likes']);
+    return view('posts.show', compact('post'));
     }
+
 
     public function store(Request $request)
     {
@@ -36,7 +36,36 @@ class PostController extends Controller
 
         $post->hashtags()->sync($ids);
 
-        return redirect()->route('feed.index')->with('success', 'Post created!');
+        return redirect()->route('feed.index')->with('success', 'Posted!');
+
     }
+    public function edit(\App\Models\Post $post)
+{
+    abort_unless($post->user_id === auth()->id(), 403);
+    return view('posts.edit', compact('post'));
+}
+
+public function update(\Illuminate\Http\Request $request, \App\Models\Post $post)
+{
+    abort_unless($post->user_id === auth()->id(), 403);
+
+    $data = $request->validate([
+        'caption' => ['required', 'string', 'max:1000'],
+    ]);
+
+    $post->update($data);
+
+    return redirect()->route('posts.show', $post)->with('success', 'Updated.');
+}
+
+public function destroy(\App\Models\Post $post)
+{
+    abort_unless($post->user_id === auth()->id(), 403);
+
+    $post->delete();
+
+    return redirect()->route('feed.index')->with('success', 'Deleted.');
+}
+
 }
 

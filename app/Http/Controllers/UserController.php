@@ -11,12 +11,13 @@ class UserController extends Controller
     {
         $viewer = auth()->user();
 
-        $posts = Post::with(['user', 'comments.user', 'likes'])
+        $posts = Post::with(['user', 'comments.user'])
             ->where('user_id', $user->id)
             ->latest()
             ->get();
 
-        $isFollowing = $viewer->following()->where('users.id', $user->id)->exists();
+        $viewer = auth()->user();
+        $isFollowing = $viewer ? $viewer->following()->where('users.id', $user->id)->exists() : false;
 
         $followersCount = $user->followers()->count();
         $followingCount = $user->following()->count();
@@ -26,7 +27,3 @@ class UserController extends Controller
         ));
     }
 }
-3
-
-
-

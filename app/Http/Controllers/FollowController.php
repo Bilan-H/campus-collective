@@ -3,24 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 
 class FollowController extends Controller
 {
-    public function store(User $user)
+    public function store(User $user): RedirectResponse
     {
-        abort_if($user->id === auth()->id(), 400);
+        $me = auth()->user();
 
-        auth()->user()->following()->syncWithoutDetaching([$user->id]);
+        abort_if($me->id === $user->id, 403);
 
-        return back();
+        // attach only if not already following
+        $me->following()->syncWithoutDetaching([$user->id]);
+
+        return back()->with('success', 'Followed.');
     }
 
-    public function destroy(User $user)
+    public function destroy(User $user): RedirectResponse
     {
-        auth()->user()->following()->detach($user->id);
+        $me = auth()->user();
 
-        return back();
+        abort_if($me->id === $user->id, 403);
+
+        $me->following()->detach($user->id);
+
+        return back()->with('success', 'Unfollowed.');
     }
 }
+
 
 
