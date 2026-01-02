@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FollowController;
+use App\Http\Controllers\LikeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,7 +111,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
-});
+
+    // Likes
+    Route::post('/posts/{post}/like', [LikeController::class, 'store'])->name('likes.store');
+    Route::delete('/posts/{post}/like', [LikeController::class, 'destroy'])->name('likes.destroy');
+
+    });
 
 require __DIR__.'/auth.php';
 

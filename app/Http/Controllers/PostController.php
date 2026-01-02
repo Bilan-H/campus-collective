@@ -8,10 +8,14 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function show(\App\Models\Post $post)
+    public function show(Post $post)
     {
-    $post->load(['user', 'comments.user', 'likes']);
+    $post->load(['user', 'comments.user'])->loadCount('likes');
     return view('posts.show', compact('post'));
+    
+    $likedByMe = $post->likes()->where('users.id', auth()->id())->exists();
+    return view('posts.show', compact('post', 'likedByMe'));
+
     }
 
 

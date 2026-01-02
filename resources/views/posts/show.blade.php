@@ -6,6 +6,11 @@
 
   <a href="{{ route('feed.index') }}" style="color:#f97316;font-weight:900;text-decoration:underline;">← Back</a>
 
+  @php
+    $likesCount = $post->likes->count();
+    $likedByMe = $post->likes->contains(auth()->id());
+  @endphp
+
   <div style="margin-top:14px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
     <div style="font-weight:900;">
       <a href="{{ route('users.show', $post->user) }}" style="color:#111;text-decoration:underline;">
@@ -15,6 +20,27 @@
     </div>
 
     <div style="margin-top:10px;white-space:pre-wrap;">{{ $post->caption }}</div>
+
+    <!-- Likes -->
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
+      <button
+        class="like-btn"
+        data-post-id="{{ $post->id }}"
+        data-liked="{{ $likedByMe ? '1' : '0' }}"
+        style="border:none;
+               background:{{ $likedByMe ? '#111' : '#f97316' }};
+               color:#fff;
+               border-radius:999px;
+               padding:8px 12px;
+               font-weight:900;
+               cursor:pointer;">
+        {{ $likedByMe ? '♥ Liked' : '♡ Like' }}
+      </button>
+
+      <span id="likes-count-{{ $post->id }}" style="font-weight:900;">
+        {{ $likesCount }}
+      </span>
+    </div>
   </div>
 
   <h2 style="margin:18px 0 10px;color:#f97316;">COMMENTS</h2>
@@ -50,8 +76,53 @@
   </div>
 
 </div>
+
+<script>
+async function toggleLike(btn) {
+  const postId = btn.dataset.postId;
+  const liked = btn.dataset.liked === '1';
+
+  try {
+    const response = await fetch(`/posts/${postId}/like`, {
+      method: liked ? 'DELETE' : 'POST',
+      headers: {
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('Like request failed:', response.status, text);
+      return;
+    }
+
+    const data = await response.json();
+
+    // Update button + count immediately
+    btn.dataset.liked = data.liked ? '1' : '0';
+    btn.textContent = data.liked ? '♥ Liked' : '♡ Like';
+    btn.style.background = data.liked ? '#111' : '#f97316';
+
+    const counter = document.getElementById(`likes-count-${postId}`);
+    if (counter) counter.textContent = data.likes;
+
+  } catch (err) {
+    console.error('Like JS error:', err);
+  }
+}
+
+document.querySelectorAll('.like-btn').forEach(btn => {
+  btn.addEventListener('click', () => toggleLike(btn));
+});
+</script>
+
+
 </body>
 </html>
+
+
 
 
 

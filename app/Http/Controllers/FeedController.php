@@ -8,10 +8,8 @@ class FeedController extends Controller
 {
     public function index()
     {
-        $posts = Post::with([
-                'user',
-                'comments.user',
-            ])
+        $posts = \App\Models\Post::with(['user', 'comments.user'])
+            ->withCount('likes')
             ->latest()
             ->get();
 

@@ -65,7 +65,12 @@
 
     <!-- Feed -->
     @forelse ($posts as $post)
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;margin-bottom:16px;">
+        @php
+            $likesCount = $post->likes->count();
+            $likedByMe = $post->likes->contains(auth()->id());
+        @endphp
+
+        <div id="post-{{ $post->id }}" style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;margin-bottom:16px;">
 
             <!-- Header -->
             <div style="padding:10px 14px;background:#fff7ed;border-bottom:1px solid #fed7aa;
@@ -84,7 +89,28 @@
             <div style="padding:14px;">
                 <div style="white-space:pre-wrap;">{{ $post->caption }}</div>
 
-                <!-- Edit / Delete (ONLY owner) -->
+                <!-- Likes -->
+                <div style="margin-top:10px;display:flex;align-items:center;gap:10px;">
+                    <button
+                        class="like-btn"
+                        data-post-id="{{ $post->id }}"
+                        data-liked="{{ $likedByMe ? '1' : '0' }}"
+                        style="border:none;
+                               background:{{ $likedByMe ? '#111' : '#f97316' }};
+                               color:#fff;
+                               border-radius:999px;
+                               padding:8px 12px;
+                               font-weight:900;
+                               cursor:pointer;">
+                        {{ $likedByMe ? '♥ Liked' : '♡ Like' }}
+                    </button>
+
+                    <span id="likes-count-{{ $post->id }}" style="font-weight:900;">
+                        {{ $likesCount }}
+                    </span>
+                </div>
+
+                <!-- Edit / Delete -->
                 @if ($post->user_id == auth()->id())
                     <div style="margin-top:10px;">
                         <a href="{{ route('posts.edit', $post) }}"
@@ -100,8 +126,8 @@
                                style="background:#b91c1c;color:#fff;border:none;border-radius:10px;
                                       padding:6px 10px;font-weight:800;cursor:pointer;">
                              Delete
-                      </button>
-                     </form>
+                            </button>
+                        </form>
                     </div>
                 @endif
             </div>
@@ -113,5 +139,50 @@
     @endforelse
 
 </div>
+
+<script>
+async function toggleLike(btn) {
+  const postId = btn.dataset.postId;
+  const liked = btn.dataset.liked === '1';
+
+  try {
+    const response = await fetch(`/posts/${postId}/like`, {
+      method: liked ? 'DELETE' : 'POST',
+      headers: {
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('Like request failed:', response.status, text);
+      return;
+    }
+
+    const data = await response.json();
+
+    // Update button + count immediately
+    btn.dataset.liked = data.liked ? '1' : '0';
+    btn.textContent = data.liked ? '♥ Liked' : '♡ Like';
+    btn.style.background = data.liked ? '#111' : '#f97316';
+
+    const counter = document.getElementById(`likes-count-${postId}`);
+    if (counter) counter.textContent = data.likes;
+
+  } catch (err) {
+    console.error('Like JS error:', err);
+  }
+}
+
+document.querySelectorAll('.like-btn').forEach(btn => {
+  btn.addEventListener('click', () => toggleLike(btn));
+});
+</script>
+
+
 </body>
 </html>
+
+
