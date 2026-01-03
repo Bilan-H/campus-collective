@@ -4,31 +4,45 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Post;
+use App\Models\Comment;
 
 class ProfileController extends Controller
 {
     public function edit(Request $request)
-{
-    $user = $request->user();
+    {
+        $user = $request->user();
 
-    // counts (works once your followers/following relationships exist on User)
-    $followersCount = method_exists($user, 'followers') ? $user->followers()->count() : 0;
-    $followingCount = method_exists($user, 'following') ? $user->following()->count() : 0;
+        // counts
+        $followersCount = method_exists($user, 'followers') ? $user->followers()->count() : 0;
+        $followingCount = method_exists($user, 'following') ? $user->following()->count() : 0;
 
-    // your posts (requires User->posts() or Post model with user_id)
-    $posts = method_exists($user, 'posts')
-        ? $user->posts()->latest()->get()
-        : \App\Models\Post::where('user_id', $user->id)->latest()->get();
+        // your posts
+        $posts = method_exists($user, 'posts')
+            ? $user->posts()->latest()->get()
+            : Post::where('user_id', $user->id)->latest()->get();
 
-    return view('profile.edit', compact('user', 'followersCount', 'followingCount', 'posts'));
-}
+        // your comments + the post they belong to (and post owner for display)
+        $comments = Comment::with(['post', 'post.user'])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->get();
+
+        return view('profile.edit', compact(
+            'user',
+            'followersCount',
+            'followingCount',
+            'posts',
+            'comments'
+        ));
+    }
 
     public function update(Request $request)
     {
         $user = $request->user();
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'  => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
         ]);
 
@@ -43,7 +57,6 @@ class ProfileController extends Controller
         $user = $request->user();
 
         Auth::logout();
-
         $user->delete();
 
         $request->session()->invalidate();
@@ -52,5 +65,6 @@ class ProfileController extends Controller
         return redirect('/');
     }
 }
+
 
 

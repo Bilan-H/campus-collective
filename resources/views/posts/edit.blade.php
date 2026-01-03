@@ -20,7 +20,7 @@
 
   {{-- Update form --}}
   <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
-    <form method="POST" action="{{ route('posts.update', $post) }}">
+    <form method="POST" action="{{ route('posts.update', $post) }}" enctype="multipart/form-data">
       @csrf
       @method('PUT')
 
@@ -41,6 +41,23 @@
            style="display:inline-block;padding:10px 14px;border-radius:12px;border:1px solid #e5e7eb;text-decoration:none;color:#111;font-weight:900;">
           Cancel
         </a>
+      @if ($post->image_path)
+  <div style="margin-top:12px;">
+    <div style="font-weight:900;margin-bottom:8px;">Current image</div>
+    <img src="{{ asset('storage/'.$post->image_path) }}"
+         style="max-width:100%;border-radius:12px;border:1px solid #e5e7eb;">
+  </div>
+@endif
+
+<div style="margin-top:12px;">
+  <label style="display:block;font-weight:900;margin-bottom:8px;">
+    Replace image (optional)
+  </label>
+  <input type="file" name="image" accept="image/*">
+  @error('image')
+    <div style="margin-top:8px;color:#b91c1c;font-size:13px;font-weight:800;">{{ $message }}</div>
+  @enderror
+</div>
 
         <button type="submit"
           style="border:none;border-radius:12px;padding:10px 14px;background:#f97316;color:#fff;font-weight:900;cursor:pointer;">

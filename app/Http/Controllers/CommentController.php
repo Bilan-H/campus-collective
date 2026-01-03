@@ -8,17 +8,33 @@ use Illuminate\Http\Request;
 class CommentController extends Controller
 {
     public function store(Request $request, Post $post)
-    {
-        $data = $request->validate([
-            'body' => ['required', 'string', 'max:500'],
-        ]);
+{
+    $data = $request->validate([
+        'body' => ['required', 'string', 'max:500'],
+    ]);
 
-        $post->comments()->create([
-            'user_id' => auth()->id(),
-            'body' => $data['body'],
-        ]);
+    $comment = $post->comments()->create([
+        'user_id' => $request->user()->id,
+        'body' => $data['body'],
+    ]);
 
-        return back();
+    $comment->load('user');
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'id' => $comment->id,
+            'body' => $comment->body,
+            'user' => [
+                'id' => $comment->user->id,
+                'name' => $comment->user->name,
+            ],
+            'created_human' => $comment->created_at->diffForHumans(),
+        ]);
     }
+
+    return back()->with('success', 'Commented!');
+}
+
+
 }
 

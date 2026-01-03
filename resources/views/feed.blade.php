@@ -1,188 +1,192 @@
-<!doctype html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Feed — Campus Collective</title>
-</head>
+@extends('layouts.app')
 
-<body style="margin:0;font-family:system-ui;background:#fafafa;">
-<div style="max-width:900px;margin:0 auto;padding:22px 18px;">
+@section('title', 'Feed — Campus Collective')
 
-    <!-- Top bar -->
-    <div style="display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:20px;">
-        <div style="position:absolute;left:0;color:#f97316;font-weight:900;">
-            FEED
+@section('content')
+
+  {{-- Create post --}}
+  <div class="card card-soft mb-4">
+    <div class="card-body">
+      <h5 class="fw-black cc-orange mb-3" style="font-weight:900;letter-spacing:.5px;">FEED</h5>
+      <form method="POST" action="{{ route('posts.store') }}" enctype="multipart/form-data">
+        @csrf
+      <label class="form-label fw-bold">Share something</label>
+
+    <textarea
+    name="caption"
+    rows="3"
+    required
+    class="form-control"
+    placeholder="Write a post… include hashtags like #law #cs"
+    >{{ old('caption') }}</textarea>
+
+    {{-- Image upload --}}
+    <input
+     type="file"
+     name="image"
+     accept="image/*"
+     class="form-control mt-2"
+    />
+
+      @error('image')
+        <div class="text-danger small fw-bold mt-2">{{ $message }}</div>
+      @enderror
+
+        @error('caption')
+          <div class="text-danger small fw-bold mt-2">{{ $message }}</div>
+        @enderror
+
+        <div class="d-flex justify-content-end mt-3">
+          <button type="submit" class="btn btn-cc px-4">Post</button>
         </div>
-
-        <div style="text-align:center;">
-            <div style="color:#f97316;font-weight:900;font-size:28px;">
-                CAMPUS COLLECTIVE ;)
-            </div>
-
-            <div style="font-size:13px;color:#666;margin-top:6px;">
-                Logged in as <strong>{{ auth()->user()->name }}</strong>
-                · <a href="{{ route('profile.edit') }}" style="color:#f97316;font-weight:800;">Profile</a>
-                ·
-                <form method="POST" action="{{ route('logout') }}" style="display:inline;">
-                    @csrf
-                    <button type="submit"
-                        style="border:none;background:none;color:#f97316;font-weight:800;cursor:pointer;">
-                        Logout
-                    </button>
-                </form>
-            </div>
-        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- Create post -->
-    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:18px;">
-        @if (session('success'))
-            <div style="background:#ecfdf5;border:1px solid #bbf7d0;padding:10px;border-radius:10px;margin-bottom:10px;">
-                {{ session('success') }}
-            </div>
-        @endif
+  {{-- Feed --}}
+  @forelse ($posts as $post)
+    @php
+      $likesCount = $post->likes->count();
+      $likedByMe = $post->likes->contains(auth()->id());
+    @endphp
 
-        <form method="POST" action="{{ route('posts.store') }}">
-            @csrf
+    <div id="post-{{ $post->id }}" class="card card-soft mb-3">
+      {{-- Header --}}
+      <div class="card-header bg-white border-0 pb-0">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <a href="{{ route('users.show', $post->user) }}"
+               class="text-decoration-none fw-bold"
+               style="color:#111;">
+              {{ $post->user->name }}
+            </a>
+            <span class="text-secondary small">· {{ $post->created_at->diffForHumans() }}</span>
+          </div>
 
-            <label style="font-weight:800;">Share something</label>
+          {{-- Owner actions --}}
+          @if ($post->user_id == auth()->id())
+            <div class="d-flex align-items-center gap-2">
+              <a href="{{ route('posts.edit', $post) }}" class="cc-orange fw-bold text-decoration-none">
+                Edit
+              </a>
 
-            <textarea name="caption" rows="3" required
-                style="width:100%;margin-top:8px;border:1px solid #d1d5db;border-radius:10px;padding:10px;">{{ old('caption') }}</textarea>
-
-            @error('caption')
-                <div style="color:#b91c1c;font-size:13px;margin-top:6px;">{{ $message }}</div>
-            @enderror
-
-            <div style="text-align:right;margin-top:10px;">
-                <button type="submit"
-                    style="background:#f97316;color:white;border:none;border-radius:10px;padding:8px 14px;font-weight:900;">
-                    Post
+              <form method="POST"
+                    action="{{ route('posts.destroy', $post) }}"
+                    class="m-0"
+                    onsubmit="return confirm('Delete this post? This cannot be undone.');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold">
+                  Delete
                 </button>
+              </form>
             </div>
-        </form>
+          @endif
+        </div>
+      </div>
+{{-- Body --}}
+<div class="card-body pt-3">
+
+  {{-- Caption --}}
+  <div class="mb-3" style="white-space:pre-wrap;line-height:1.5;">
+    {{ $post->caption }}
+  </div>
+ 
+
+
+  {{-- Image (only if uploaded) --}}
+  @if ($post->image_path)
+    <div class="mb-3">
+      <img
+        src="{{ asset('storage/' . $post->image_path) }}"
+        alt="Post image"
+        class="img-fluid rounded"
+        style="border:1px solid #e5e7eb;"
+      >
+    </div>
+  @endif
+
+  {{-- Likes row --}}
+  <div class="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            class="btn btn-sm fw-bold like-btn {{ $likedByMe ? 'btn-dark' : 'btn-cc' }}"
+            data-post-id="{{ $post->id }}"
+            data-liked="{{ $likedByMe ? '1' : '0' }}"
+          >
+            {{ $likedByMe ? '♥ Liked' : '♡ Like' }}
+          </button>
+
+          <span class="fw-bold" id="likes-count-{{ $post->id }}">{{ $likesCount }}</span>
+
+          <a class="ms-2 text-decoration-none cc-orange fw-bold"
+             href="{{ route('posts.show', $post) }}">
+            View post
+          </a>
+        </div>
+      </div>
     </div>
 
-    <!-- Feed -->
-    @forelse ($posts as $post)
-        @php
-            $likesCount = $post->likes->count();
-            $likedByMe = $post->likes->contains(auth()->id());
-        @endphp
+  @empty
+    <div class="card card-soft">
+      <div class="card-body text-secondary">
+        No posts yet.
+      </div>
+    </div>
+  @endforelse
 
-        <div id="post-{{ $post->id }}" style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;margin-bottom:16px;">
-
-            <!-- Header -->
-            <div style="padding:10px 14px;background:#fff7ed;border-bottom:1px solid #fed7aa;
-                        display:flex;justify-content:space-between;align-items:center;">
-                <a href="{{ route('users.show', $post->user) }}"
-                   style="font-weight:900;color:black;text-decoration:underline;">
-                    {{ $post->user->name }}
-                </a>
-
-                <div style="font-size:13px;color:#6b7280;">
-                    {{ $post->created_at->diffForHumans() }}
-                </div>
-            </div>
-
-            <!-- Body -->
-            <div style="padding:14px;">
-                <div style="white-space:pre-wrap;">{{ $post->caption }}</div>
-
-                <!-- Likes -->
-                <div style="margin-top:10px;display:flex;align-items:center;gap:10px;">
-                    <button
-                        class="like-btn"
-                        data-post-id="{{ $post->id }}"
-                        data-liked="{{ $likedByMe ? '1' : '0' }}"
-                        style="border:none;
-                               background:{{ $likedByMe ? '#111' : '#f97316' }};
-                               color:#fff;
-                               border-radius:999px;
-                               padding:8px 12px;
-                               font-weight:900;
-                               cursor:pointer;">
-                        {{ $likedByMe ? '♥ Liked' : '♡ Like' }}
-                    </button>
-
-                    <span id="likes-count-{{ $post->id }}" style="font-weight:900;">
-                        {{ $likesCount }}
-                    </span>
-                </div>
-
-                <!-- Edit / Delete -->
-                @if ($post->user_id == auth()->id())
-                    <div style="margin-top:10px;">
-                        <a href="{{ route('posts.edit', $post) }}"
-                           style="color:#f97316;font-weight:800;">Edit</a>
-
-                        <form method="POST"
-                              action="{{ route('posts.destroy', $post) }}"
-                              style="display:inline;"
-                              onsubmit="return confirm('Delete this post? This cannot be undone.');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                               style="background:#b91c1c;color:#fff;border:none;border-radius:10px;
-                                      padding:6px 10px;font-weight:800;cursor:pointer;">
-                             Delete
-                            </button>
-                        </form>
-                    </div>
-                @endif
-            </div>
-        </div>
-    @empty
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;">
-            No posts yet.
-        </div>
-    @endforelse
-
+{{-- Pagination --}}
+  <div class="d-flex justify-content-center mt-4">
+  {{ $posts->links('pagination::bootstrap-5') }}
 </div>
+  <script>
+    async function toggleLike(btn) {
+      const postId = btn.dataset.postId;
+      const liked = btn.dataset.liked === '1';
 
-<script>
-async function toggleLike(btn) {
-  const postId = btn.dataset.postId;
-  const liked = btn.dataset.liked === '1';
+      try {
+        const response = await fetch(`/posts/${postId}/like`, {
+          method: liked ? 'DELETE' : 'POST',
+          headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
 
-  try {
-    const response = await fetch(`/posts/${postId}/like`, {
-      method: liked ? 'DELETE' : 'POST',
-      headers: {
-        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('Like request failed:', response.status, text);
+          return;
+        }
+
+        const data = await response.json();
+
+        // update state
+        btn.dataset.liked = data.liked ? '1' : '0';
+        btn.textContent = data.liked ? '♥ Liked' : '♡ Like';
+
+        // swap bootstrap button classes
+        btn.classList.toggle('btn-dark', data.liked);
+        btn.classList.toggle('btn-cc', !data.liked);
+
+        const counter = document.getElementById(`likes-count-${postId}`);
+        if (counter) counter.textContent = data.likes;
+
+      } catch (err) {
+        console.error('Like JS error:', err);
       }
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('Like request failed:', response.status, text);
-      return;
     }
 
-    const data = await response.json();
+    // bind once DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', () => toggleLike(btn));
+      });
+    });
+  </script>
 
-    // Update button + count immediately
-    btn.dataset.liked = data.liked ? '1' : '0';
-    btn.textContent = data.liked ? '♥ Liked' : '♡ Like';
-    btn.style.background = data.liked ? '#111' : '#f97316';
+@endsection
 
-    const counter = document.getElementById(`likes-count-${postId}`);
-    if (counter) counter.textContent = data.likes;
-
-  } catch (err) {
-    console.error('Like JS error:', err);
-  }
-}
-
-document.querySelectorAll('.like-btn').forEach(btn => {
-  btn.addEventListener('click', () => toggleLike(btn));
-});
-</script>
-
-
-</body>
-</html>
 
 

@@ -83,34 +83,11 @@ Route::middleware(['auth'])->group(function () {
     | Profile (own account page)
     |--------------------
     */
-    Route::get('/profile', function (Request $request) {
-        $user = $request->user();
+    // Profile (controller)
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-        $followersCount = method_exists($user, 'followers')
-            ? $user->followers()->count()
-            : 0;
-
-        $followingCount = method_exists($user, 'following')
-            ? $user->following()->count()
-            : 0;
-
-        $posts = method_exists($user, 'posts')
-            ? $user->posts()->latest()->get()
-            : \App\Models\Post::where('user_id', $user->id)->latest()->get();
-
-        return view('profile.edit', compact(
-            'user',
-            'followersCount',
-            'followingCount',
-            'posts'
-        ));
-    })->name('profile.edit');
-
-    Route::patch('/profile', [ProfileController::class, 'update'])
-        ->name('profile.update');
-
-    Route::delete('/profile', [ProfileController::class, 'destroy'])
-        ->name('profile.destroy');
 
     // Likes
     Route::post('/posts/{post}/like', [LikeController::class, 'store'])->name('likes.store');

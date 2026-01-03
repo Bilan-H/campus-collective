@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Post extends Model
 {
     use HasFactory;
-    protected $fillable = ['user_id', 'caption'];
+    protected $fillable = ['user_id', 'caption', 'image_path'];
     
     // Post belongs to one User
     public function user()
