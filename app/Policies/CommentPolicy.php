@@ -37,7 +37,8 @@ class CommentPolicy
      */
     public function update(User $user, Comment $comment): bool
     {
-        //
+        return $user->role === 'admin' || $comment->user_id === $user->id;
+
     }
 
     /**
@@ -45,7 +46,8 @@ class CommentPolicy
      */
     public function delete(User $user, Comment $comment): bool
     {
-        //
+        return $user->role === 'admin' || $comment->user_id === $user->id;
+
     }
 
     /**

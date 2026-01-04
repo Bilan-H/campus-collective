@@ -4,124 +4,141 @@
 
 @section('content')
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <a href="{{ route('feed.index') }}" class="cc-orange fw-bold text-decoration-none">
-      ← Back
-    </a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <a href="{{ route('feed.index') }}" class="cc-orange fw-bold text-decoration-none">
+    ← Back
+  </a>
 
-    @if ($post->user_id == auth()->id())
-      <div class="d-flex gap-2">
-        <a href="{{ route('posts.edit', $post) }}" class="btn btn-outline-cc btn-sm fw-bold">
+  {{-- Edit / Delete (policy controlled: owner OR admin) --}}
+  @canany(['update', 'delete'], $post)
+    <div class="d-flex gap-2">
+      @can('update', $post)
+        <a href="{{ route('posts.edit', $post) }}"
+           class="btn btn-outline-cc btn-sm fw-bold">
           Edit
         </a>
+      @endcan
 
+      @can('delete', $post)
         <form method="POST"
               action="{{ route('posts.destroy', $post) }}"
               onsubmit="return confirm('Delete this post? This cannot be undone.');">
           @csrf
           @method('DELETE')
-          <button type="submit" class="btn btn-danger btn-sm fw-bold">
+          <button type="submit"
+                  class="btn btn-danger btn-sm fw-bold">
             Delete
           </button>
         </form>
-      </div>
-    @endif
-  </div>
+      @endcan
+    </div>
+  @endcanany
+</div>
 
-  @php
-    $likesCount = $post->likes->count();
-    $likedByMe = $post->likes->contains(auth()->id());
-  @endphp
+@php
+  $likesCount = $post->likes->count();
+  $likedByMe = $post->likes->contains(auth()->id());
+@endphp
 
-  {{-- Post card --}}
-  <div class="card card-soft mb-4" id="post-{{ $post->id }}">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <div class="fw-bold">
-          <a href="{{ route('users.show', $post->user) }}" class="text-dark text-decoration-none fw-black">
-            {{ $post->user->name }}
-          </a>
-          <span class="text-secondary fw-normal">· {{ $post->created_at->diffForHumans() }}</span>
-        </div>
-      </div>
+{{-- Post card --}}
+<div class="card card-soft mb-4" id="post-{{ $post->id }}">
+  <div class="card-body">
 
-      <div style="white-space:pre-wrap;line-height:1.55;">
-        {{ $post->caption }}
-      </div>
-
-      {{-- Image (NEW) --}}
-      @if ($post->image_path)
-        <div class="mt-3">
-          <img
-            src="{{ asset('storage/'.$post->image_path) }}"
-            class="img-fluid rounded border"
-            alt="Post image">
-        </div>
-      @endif
-
-      {{-- Like row --}}
-      <div class="d-flex align-items-center gap-2 mt-3">
-        <button
-          class="like-btn btn btn-sm {{ $likedByMe ? 'btn-dark' : 'btn-cc' }}"
-          data-post-id="{{ $post->id }}"
-          data-liked="{{ $likedByMe ? '1' : '0' }}"
-          type="button"
-        >
-          <span class="like-label">{{ $likedByMe ? '♥ Liked' : '♡ Like' }}</span>
-        </button>
-
-        <span id="likes-count-{{ $post->id }}" class="fw-bold">
-          {{ $likesCount }}
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="fw-bold">
+        <a href="{{ route('users.show', $post->user) }}"
+           class="text-dark text-decoration-none fw-black">
+          {{ $post->user->name }}
+        </a>
+        <span class="text-secondary fw-normal">
+          · {{ $post->created_at->diffForHumans() }}
         </span>
       </div>
     </div>
-  </div>
 
-  {{-- Comments --}}
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <div class="cc-orange fw-black" style="font-weight:900;letter-spacing:.8px;">
-      COMMENTS
+    <div style="white-space:pre-wrap;line-height:1.55;">
+      {{ $post->caption }}
+    </div>
+
+    {{-- Image --}}
+    @if ($post->image_path)
+      <div class="mt-3">
+        <img src="{{ asset('storage/'.$post->image_path) }}"
+             class="img-fluid rounded border"
+             alt="Post image">
+      </div>
+    @endif
+
+    {{-- Likes --}}
+    <div class="d-flex align-items-center gap-2 mt-3">
+      <button
+        class="like-btn btn btn-sm {{ $likedByMe ? 'btn-dark' : 'btn-cc' }}"
+        data-post-id="{{ $post->id }}"
+        data-liked="{{ $likedByMe ? '1' : '0' }}"
+        type="button"
+      >
+        <span class="like-label">
+          {{ $likedByMe ? '♥ Liked' : '♡ Like' }}
+        </span>
+      </button>
+
+      <span id="likes-count-{{ $post->id }}" class="fw-bold">
+        {{ $likesCount }}
+      </span>
     </div>
   </div>
+</div>
 
-  <div class="card card-soft">
-    <div class="card-body">
-      <form method="POST" action="{{ route('comments.store', $post) }}">
-        @csrf
+{{-- Comments --}}
+<div class="cc-orange fw-black mb-2" style="font-weight:900;letter-spacing:.8px;">
+  COMMENTS
+</div>
 
-        <div class="mb-2">
-          <textarea name="body" rows="3" required class="form-control"
-            style="border-radius:12px;">{{ old('body') }}</textarea>
+<div class="card card-soft">
+  <div class="card-body">
 
-          @error('body')
-            <div class="text-danger small fw-bold mt-2">{{ $message }}</div>
-          @enderror
+    {{-- Comment form --}}
+    <form method="POST" action="{{ route('comments.store', $post) }}">
+      @csrf
+
+      <div class="mb-2">
+        <textarea name="body" rows="3" required
+                  class="form-control"
+                  style="border-radius:12px;">{{ old('body') }}</textarea>
+
+        @error('body')
+          <div class="text-danger small fw-bold mt-2">{{ $message }}</div>
+        @enderror
+      </div>
+
+      <div class="text-end">
+        <button type="submit"
+                class="btn btn-cc px-4 fw-bold">
+          Comment
+        </button>
+      </div>
+    </form>
+
+    <hr class="my-3">
+
+    {{-- Comment list --}}
+    @forelse ($post->comments as $c)
+      <div class="py-2 border-bottom">
+        <div class="small text-secondary">
+          <a href="{{ route('users.show', $c->user) }}"
+             class="text-dark fw-bold text-decoration-none">
+            {{ $c->user->name }}
+          </a>
+          · {{ $c->created_at->diffForHumans() }}
         </div>
+        <div class="mt-1">{{ $c->body }}</div>
+      </div>
+    @empty
+      <div class="text-secondary">No comments yet.</div>
+    @endforelse
 
-        <div class="text-end">
-          <button type="submit" class="btn btn-cc px-4 fw-bold">
-            Comment
-          </button>
-        </div>
-      </form>
-
-      <hr class="my-3">
-
-      @forelse ($post->comments as $c)
-        <div class="py-2 border-bottom">
-          <div class="small text-secondary">
-            <a href="{{ route('users.show', $c->user) }}" class="text-dark fw-bold text-decoration-none">
-              {{ $c->user->name }}
-            </a>
-            · {{ $c->created_at->diffForHumans() }}
-          </div>
-          <div class="mt-1">{{ $c->body }}</div>
-        </div>
-      @empty
-        <div class="text-secondary">No comments yet.</div>
-      @endforelse
-    </div>
   </div>
+</div>
 
 @endsection
 
@@ -147,15 +164,12 @@ async function toggleLike(btn) {
 
     btn.dataset.liked = data.liked ? '1' : '0';
 
-    // Button label
     const label = btn.querySelector('.like-label');
     if (label) label.textContent = data.liked ? '♥ Liked' : '♡ Like';
 
-    // Button style
     btn.classList.toggle('btn-dark', data.liked);
     btn.classList.toggle('btn-cc', !data.liked);
 
-    // Count
     const counter = document.getElementById(`likes-count-${postId}`);
     if (counter) counter.textContent = data.likes;
 

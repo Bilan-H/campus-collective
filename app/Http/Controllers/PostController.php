@@ -7,40 +7,44 @@ use App\Models\Hashtag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-
 class PostController extends Controller
 {
     public function show(Post $post)
     {
-    $post->load(['user', 'comments.user'])->loadCount('likes');
-    return view('posts.show', compact('post'));
-    
-    $likedByMe = $post->likes()->where('users.id', auth()->id())->exists();
-    return view('posts.show', compact('post', 'likedByMe'));
+        // Load relationships and counts once
+        $post->load(['user', 'comments.user'])
+             ->loadCount('likes');
 
+        // Whether the logged-in user has liked this post
+        $likedByMe = $post->likes()
+            ->where('users.id', auth()->id())
+            ->exists();
+
+        return view('posts.show', compact('post', 'likedByMe'));
     }
-
 
     public function store(Request $request)
     {
         $data = $request->validate([
-        'caption' => 'required|string|max:255',
-        'image' => 'nullable|image|max:4096', // 4MB
+            'caption' => ['required', 'string', 'max:255'],
+            'image'   => ['nullable', 'image', 'max:4096'], // 4MB
         ]);
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-        $imagePath = $request->file('image')->store('posts', 'public');
+            $imagePath = $request->file('image')->store('posts', 'public');
         }
 
         $post = $request->user()->posts()->create([
-        'caption' => $data['caption'],
-        'image_path' => $imagePath,
+            'caption'    => $data['caption'],
+            'image_path' => $imagePath,
         ]);
 
         // Hashtags extracted from caption: #word
         preg_match_all('/#(\w+)/', $data['caption'], $matches);
-        $names = collect($matches[1])->map(fn ($t) => strtolower($t))->unique();
+        $names = collect($matches[1])
+            ->map(fn ($t) => strtolower($t))
+            ->unique();
 
         $ids = $names->map(function ($name) {
             return Hashtag::firstOrCreate(
@@ -52,44 +56,57 @@ class PostController extends Controller
         $post->hashtags()->sync($ids);
 
         return redirect()->route('feed.index')->with('success', 'Posted!');
-
     }
-    public function edit(\App\Models\Post $post)
-{
-    abort_unless($post->user_id === auth()->id(), 403);
-    return view('posts.edit', compact('post'));
-}
 
-public function update(\Illuminate\Http\Request $request, \App\Models\Post $post)
-{
-    abort_unless($post->user_id === auth()->id(), 403);
+    public function edit(Post $post)
+    {
+        // Policy-based authorisation (admin OR owner)
+        $this->authorize('update', $post);
 
-    $data = $request->validate([
-        'caption' => ['required', 'string', 'max:1000'],
-        'image'   => ['nullable', 'image', 'max:4096'],
-    ]);
-    
-    if ($request->hasFile('image')) {
+        return view('posts.edit', compact('post'));
+    }
+
+    public function update(Request $request, Post $post)
+    {
+        $this->authorize('update', $post);
+
+        $data = $request->validate([
+            'caption' => ['required', 'string', 'max:1000'],
+            'image'   => ['nullable', 'image', 'max:4096'],
+        ]);
+
+        $update = [
+            'caption' => $data['caption'],
+        ];
+
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($post->image_path) {
+                Storage::disk('public')->delete($post->image_path);
+            }
+
+            $update['image_path'] = $request->file('image')->store('posts', 'public');
+        }
+
+        $post->update($update);
+
+        return redirect()->route('posts.show', $post)->with('success', 'Updated.');
+    }
+
+    public function destroy(Post $post)
+    {
+        $this->authorize('delete', $post);
+
+        // Delete image file too
         if ($post->image_path) {
             Storage::disk('public')->delete($post->image_path);
         }
-        $data['image_path'] = $request->file('image')->store('posts', 'public');
+
+        $post->delete();
+
+        return redirect()->route('feed.index')->with('success', 'Deleted.');
     }
-
-
-    $post->update($data);
-
-    return redirect()->route('posts.show', $post)->with('success', 'Updated.');
 }
 
-public function destroy(\App\Models\Post $post)
-{
-    abort_unless($post->user_id === auth()->id(), 403);
-
-    $post->delete();
-
-    return redirect()->route('feed.index')->with('success', 'Deleted.');
-}
-
-}
+ 
 
