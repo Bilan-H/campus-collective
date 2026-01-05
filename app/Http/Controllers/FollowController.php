@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use App\Notifications\NewFollower;
 
 class FollowController extends Controller
 {
@@ -13,7 +14,6 @@ class FollowController extends Controller
 
         abort_if($me->id === $user->id, 403);
 
-        // attach only if not already following
         $me->following()->syncWithoutDetaching([$user->id]);
 
         return back()->with('success', 'Followed.');
@@ -28,6 +28,9 @@ class FollowController extends Controller
         $me->following()->detach($user->id);
 
         return back()->with('success', 'Unfollowed.');
+        if ($userToFollow->id !== auth()->id()) {
+    $userToFollow->notify(new NewFollower(auth()->user()));
+        }
     }
 }
 

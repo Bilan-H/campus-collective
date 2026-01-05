@@ -11,11 +11,11 @@ class PostController extends Controller
 {
     public function show(Post $post)
     {
-        // Load relationships and counts once
+        // load relationships and counts
         $post->load(['user', 'comments.user'])
              ->loadCount('likes');
 
-        // Whether the logged-in user has liked this post
+        // if user has liked the post
         $likedByMe = $post->likes()
             ->where('users.id', auth()->id())
             ->exists();
@@ -40,7 +40,7 @@ class PostController extends Controller
             'image_path' => $imagePath,
         ]);
 
-        // Hashtags extracted from caption: #word
+        // Hashtags 
         preg_match_all('/#(\w+)/', $data['caption'], $matches);
         $names = collect($matches[1])
             ->map(fn ($t) => strtolower($t))
@@ -60,7 +60,7 @@ class PostController extends Controller
 
     public function edit(Post $post)
     {
-        // Policy-based authorisation (admin OR owner)
+        // authorisationad: admin or owner
         $this->authorize('update', $post);
 
         return view('posts.edit', compact('post'));
@@ -80,7 +80,7 @@ class PostController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            // Delete old image if exists
+            // deleting old image if exists
             if ($post->image_path) {
                 Storage::disk('public')->delete($post->image_path);
             }

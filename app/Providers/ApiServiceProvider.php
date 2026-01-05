@@ -3,22 +3,17 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\GitHubService;
 
 class ApiServiceProvider extends ServiceProvider
 {
-    /**
-     * Register services.
-     */
     public function register(): void
-{
-    $this->app->singleton(\App\Services\GitHubService::class, function () {
-        return new \App\Services\GitHubService();
-    });
-}
+    {
+        $this->app->singleton(GitHubService::class, function () {
+            return new GitHubService();
+        });
+    }
 
-    /**
-     * Bootstrap services.
-     */
     public function boot(): void
     {
         //

@@ -47,12 +47,6 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
-
     // User has many posts
     public function posts()
     {
@@ -87,12 +81,7 @@ class User extends Authenticatable
         )->withTimestamps();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Helper methods (optional but useful)
-    |--------------------------------------------------------------------------
-    */
-
+   
     public function isFollowing(User $other): bool
     {
         return $this->following()->where('users.id', $other->id)->exists();

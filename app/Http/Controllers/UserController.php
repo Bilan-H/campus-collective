@@ -17,7 +17,7 @@ class UserController extends Controller
             ->latest()
             ->get();
 
-        // Comments made by THIS user, with the post they commented on
+        // comments made by user with the post they commented on
         $comments = Comment::with(['post', 'post.user'])
             ->where('user_id', $user->id)
             ->latest()

@@ -25,7 +25,7 @@
         </div>
       </div>
 
-      {{-- Follow button (only if viewing someone else) --}}
+      {{-- Follow button --}}
       @if (auth()->id() !== $user->id)
         <div>
           @if (!empty($isFollowing) && $isFollowing)

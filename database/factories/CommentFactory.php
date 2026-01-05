@@ -2,33 +2,40 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\User;
+use App\Models\Comment;
 use App\Models\Post;
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Comment>
- */
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Arr;
+
 class CommentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Comment::class;
+
     public function definition(): array
     {
+        $faker = fake('en_GB');
+
+        $comments = [
+            "Same I ran into that too. Clearing route cache fixed it.",
+            "This is actually really helpful, thanks.",
+            "How did you implement the policy part? I'm stuck on authorisation.",
+            "Respect I would’ve rage quit by now.",
+            "Try `optimize:clear` and re-run the migration, it saved me.",
+            "This layout looks clean. Add pagination and you're basically done.",
+            "Are you using Sail? Docker permissions were a nightmare for me.",
+            "Nice. Next step: notifications when someone likes/comments.",
+        ];
+
+        $createdAt = now()->subDays(rand(0, 45))->subMinutes(rand(0, 24 * 60));
+
         return [
-
-            //Commenter
-            'user_id' => User::factory(),
-            
-            //Post that has comment
-            'post_id' => Post::factory(),
-
-            //The comment text itself.
-            'body' => $this->faker->sentence(9)
-                        
-
+            'post_id'    => Post::inRandomOrder()->value('id') ?? Post::factory(),
+            'user_id'    => User::inRandomOrder()->value('id') ?? User::factory(),
+            'body'       => Arr::random($comments),
+            'created_at' => $createdAt,
+            'updated_at' => $createdAt,
         ];
     }
 }
+

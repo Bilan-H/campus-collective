@@ -3,17 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Services\GitHubService;
 
 class FeedController extends Controller
 {
-    public function index()
+    public function index(GitHubService $github)
 {
-    $posts = \App\Models\Post::with(['user', 'comments.user', 'likes'])
+    $posts = Post::with(['user', 'comments.user', 'likes'])
         ->latest()
         ->paginate(10);
 
-    return view('feed', compact('posts'));
+    $githubUser = $github->getUser('laravel');
+    $githubRepo = $github->getRepo('laravel/framework');
+
+    return view('feed', compact('posts', 'githubUser', 'githubRepo'));
 }
 
 }
+
 

@@ -14,6 +14,6 @@ protected $fillable = ['name', 'slug'];
 // Hashtags can be in many posts and Posts can have many hashtags
     public function posts()
     {
-        return $this->belongsToMany(Post::class);
+        return $this->belongsToMany(Post::class)->withTimestamps();
     }
 }

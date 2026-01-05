@@ -97,12 +97,15 @@
 <div class="card card-soft">
   <div class="card-body">
 
-    {{-- Comment form --}}
-    <form method="POST" action="{{ route('comments.store', $post) }}">
+    {{-- Inline error placeholder for AJAX --}}
+    <div id="comment-error" class="alert alert-danger py-2 d-none"></div>
+
+    {{-- Comment form (AJAX-enabled) --}}
+    <form id="comment-form" method="POST" action="{{ route('comments.store', $post) }}">
       @csrf
 
       <div class="mb-2">
-        <textarea name="body" rows="3" required
+        <textarea id="comment-body" name="body" rows="3" required
                   class="form-control"
                   style="border-radius:12px;">{{ old('body') }}</textarea>
 
@@ -112,7 +115,7 @@
       </div>
 
       <div class="text-end">
-        <button type="submit"
+        <button id="comment-submit" type="submit"
                 class="btn btn-cc px-4 fw-bold">
           Comment
         </button>
@@ -122,20 +125,22 @@
     <hr class="my-3">
 
     {{-- Comment list --}}
-    @forelse ($post->comments as $c)
-      <div class="py-2 border-bottom">
-        <div class="small text-secondary">
-          <a href="{{ route('users.show', $c->user) }}"
-             class="text-dark fw-bold text-decoration-none">
-            {{ $c->user->name }}
-          </a>
-          · {{ $c->created_at->diffForHumans() }}
+    <div id="comments-list">
+      @forelse ($post->comments as $c)
+        <div class="py-2 border-bottom">
+          <div class="small text-secondary">
+            <a href="{{ route('users.show', $c->user) }}"
+               class="text-dark fw-bold text-decoration-none">
+              {{ $c->user->name }}
+            </a>
+            · {{ $c->created_at->diffForHumans() }}
+          </div>
+          <div class="mt-1">{{ $c->body }}</div>
         </div>
-        <div class="mt-1">{{ $c->body }}</div>
-      </div>
-    @empty
-      <div class="text-secondary">No comments yet.</div>
-    @endforelse
+      @empty
+        <div id="no-comments" class="text-secondary">No comments yet.</div>
+      @endforelse
+    </div>
 
   </div>
 </div>
@@ -144,6 +149,7 @@
 
 @push('scripts')
 <script>
+
 async function toggleLike(btn) {
   const postId = btn.dataset.postId;
   const liked = btn.dataset.liked === '1';
@@ -184,5 +190,99 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   toggleLike(btn);
 });
+
+
+function showCommentError(msg) {
+  const box = document.getElementById('comment-error');
+  if (!box) return;
+  box.textContent = msg;
+  box.classList.remove('d-none');
+}
+
+function clearCommentError() {
+  const box = document.getElementById('comment-error');
+  if (!box) return;
+  box.textContent = '';
+  box.classList.add('d-none');
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('comment-form');
+  const textarea = document.getElementById('comment-body');
+  const submitBtn = document.getElementById('comment-submit');
+  const list = document.getElementById('comments-list');
+  const noComments = document.getElementById('no-comments');
+
+  if (!form || !textarea || !submitBtn || !list) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearCommentError();
+
+    const body = textarea.value.trim();
+    if (!body) return;
+
+    submitBtn.disabled = true;
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ body })
+      });
+
+      if (!response.ok) {
+        let msg = 'Could not post comment.';
+        try {
+          const data = await response.json();
+          if (data?.message) msg = data.message;
+          if (data?.errors?.body?.[0]) msg = data.errors.body[0];
+        } catch (_) {}
+        showCommentError(msg);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (noComments) noComments.remove();
+
+      const html = `
+        <div class="py-2 border-bottom">
+          <div class="small text-secondary">
+            <a href="/users/${data.user.id}" class="text-dark fw-bold text-decoration-none">
+              ${escapeHtml(data.user.name)}
+            </a>
+            · ${escapeHtml(data.created_human)}
+          </div>
+          <div class="mt-1">${escapeHtml(data.body)}</div>
+        </div>
+      `;
+      list.insertAdjacentHTML('afterbegin', html);
+
+      textarea.value = '';
+
+    } catch (err) {
+      console.error(err);
+      showCommentError('Network error posting comment.');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+});
 </script>
 @endpush
+

@@ -17,12 +17,12 @@ class ProfileController extends Controller
         $followersCount = method_exists($user, 'followers') ? $user->followers()->count() : 0;
         $followingCount = method_exists($user, 'following') ? $user->following()->count() : 0;
 
-        // your posts
+        // my posts
         $posts = method_exists($user, 'posts')
             ? $user->posts()->latest()->get()
             : Post::where('user_id', $user->id)->latest()->get();
 
-        // your comments + the post they belong to (and post owner for display)
+        // my comments + the post they belong to 
         $comments = Comment::with(['post', 'post.user'])
             ->where('user_id', $user->id)
             ->latest()
